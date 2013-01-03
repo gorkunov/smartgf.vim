@@ -77,12 +77,14 @@ endfunction
 
 function! s:DrawResults(word, lines, leftmaxwidth, rightmaxwidth, current_position, start_at)
     let index = a:start_at
+    let end_at = a:start_at + g:smartgf_max_entries_per_page
     let divider = repeat(' ', g:smartgf_divider_width)
     redraw!
-    "show "Search result for blabla:"
-    call s:Print('SmartGfTitle', 'Search results for ', 'SmartGfSearchWord', a:word, 'SmartGfTitle', ':')
+    "show "Search result (1-9 of 20) for blabla:"
+    call s:Print('SmartGfTitle', 'Search results (' . (a:start_at + 1) . '-' . end_at . ' of ' . len(a:lines) . ') for ',
+            \ 'SmartGfSearchWord', a:word, 'SmartGfTitle', ':')
 
-    while index < len(a:lines) && index < a:start_at + g:smartgf_max_entries_per_page
+    while index < len(a:lines) && index < end_at
         let line = []
         let entry = a:lines[index]
         let visible_index = index < 9 ? string(index + 1) : 'x'
@@ -131,7 +133,9 @@ function! s:DrawResults(word, lines, leftmaxwidth, rightmaxwidth, current_positi
         let index += 1
     endwhile
 
-    call s:Print('SmartGfPrompt', 'Press ', 'SmartGfIndex', '1-9', 'SmartGfPrompt', ' or use k,l and o,Enter to open file:')
+    call s:Print(['SmartGfPrompt', 'Press ', 'SmartGfIndex', '1-9', 'SmartGfPrompt', 
+                \ ' or use ', 'SmartGfIndex', 'k', 'SmartGfPrompt', ',', 'SmartGfIndex', 'l', 'SmartGfPrompt', 
+                \ ' and ', 'SmartGfIndex', 'o', 'SmartGfPrompt', ',', 'SmartGfIndex', 'Enter', 'SmartGfPrompt', ' to open file:'])
 endfunction
 
 function! s:Open(position)
