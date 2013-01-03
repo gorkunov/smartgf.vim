@@ -1,11 +1,43 @@
-let g:smartgf_max_entries_per_page = 9
-let g:rails_mappings = 0
-let g:smartgf_divider_width = 5
+"smartgf.vim - Goto file on steroids
+"
+"Author: Alex Gorkunov <alex.gorkunov@cloudcastlegroup.com>
+"Source repository: https://github.com/gorkunov/smartgf.vim
+"
+"vim: set tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 
+"avoid installing twice
+"if exists('g:loaded_smartgf')
+    "finish
+"endif
+"check if debugging is turned off
+if !exists('g:smartgf_debug')
+    let g:loaded_smartgf = 1
+end
+
+"max visible search results on page
+if !exists('g:smartgf_max_entries_per_page')
+    let g:smartgf_max_entries_per_page = 9
+end
+
+"check key mappings
+if !exists('g:smartgf_key')
+    "disable rails mappings if smartgf uses default mapping (it override gf for each buffer)
+    let g:rails_mappings = 0
+    let g:smartgf_key = 'gf'
+endif
+
+"define divider width between text and file path in the results
+if !exists('g:smartgf_divider_width')
+    let g:smartgf_divider_width = 5
+endif
+
+"detect system ack (thanks Ack.vim)
 let s:ack = executable('ack-grep') ? 'ack-grep' : 'ack'
 let s:ack .= ' -H --nocolor --nogroup --column '
 
-function! s:ExtractColors(group)
+
+"get dictionary with color settings from hi group
+function! s:ExtractColorsFromHighlightGroup(group)
     redir => group | exe 'silent highlight '. a:group | redir END
     let out = split(matchlist(group,  '\<xxx\>\s\+\(.*\)')[1], '\n')
     let out = split(out[0], ' ')
@@ -17,16 +49,18 @@ function! s:ExtractColors(group)
     return result
 endfunction
 
+"define new hi group with *name* based on *parent* group 
+"but with overrided colors from *mixparent* 
 function! s:DefineHighlight(name, parent, mixparent)
 
     let parent_colors = {}
     if a:parent != ''
-        let parent_colors = s:ExtractColors(a:parent)
+        let parent_colors = s:ExtractColorsFromHighlightGroup(a:parent)
     endif
 
     let mixparent_colors = {}
     if a:mixparent != ''
-        let mixparent_colors = s:ExtractColors(a:mixparent)
+        let mixparent_colors = s:ExtractColorsFromHighlightGroup(a:mixparent)
     endif
 
     let mix_colors = copy(parent_colors)
@@ -40,25 +74,32 @@ function! s:DefineHighlight(name, parent, mixparent)
     execute 'silent! hi! ' . a:name . str
 endfunction
 
-hi! link SmartGfTitle Title
-hi! link SmartGfPrompt Underlined
-hi! link SmartGfSearchWord Type
+"define two hi groups
+"the first (*name*) based on *base*
+"the second (*name* + Selected) based on *base* and extended with CursorLine
+function! s:DefineHighlightWithSelected(name, base)
+    call s:DefineHighlight(a:name, a:base, '')
+    call s:DefineHighlight(a:name . 'Selected', a:base, 'CursorLine')
+endfunction
 
-call s:DefineHighlight('SmartGfIndex',         'Identifier', '')
-call s:DefineHighlight('SmartGfIndexSelected', 'Identifier', 'CursorLine')
+"define colors scheme for search results window
+call s:DefineHighlight('SmartGfTitle', 'Title', '')
+call s:DefineHighlight('SmartGfPrompt', 'Underlined', '')
+call s:DefineHighlight('SmartGfSearchWord', 'Type', '')
 
-call s:DefineHighlight('SmartGfSearchLine',         'Statement', '')
-call s:DefineHighlight('SmartGfSearchLineSelected', 'Statement', 'CursorLine')
+"for rows style apply selected style too (from CursorLine style)
+call s:DefineHighlightWithSelected('SmartGfIndex', 'Identifier')
+call s:DefineHighlightWithSelected('SmartGfSearchLine', 'Statement')
+call s:DefineHighlightWithSelected('SmartGfSearchLineHighlight', 'Search')
+call s:DefineHighlightWithSelected('SmartGfDivider', '')
+call s:DefineHighlightWithSelected('SmartGfFilePath', 'Comment')
 
-call s:DefineHighlight('SmartGfSearchLineHighlight',         'Search', '')
-call s:DefineHighlight('SmartGfSearchLineHighlightSelected', 'Search', 'CursorLine')
-
-call s:DefineHighlight('SmartGfDivider',         '', '')
-call s:DefineHighlight('SmartGfDividerSelected', '', 'CursorLine')
-
-call s:DefineHighlight('SmartGfFilePath',         'Comment', '')
-call s:DefineHighlight('SmartGfFilePathSelected', 'Comment', 'CursorLine')
-
+"print line to command line with defined styles e.g.
+"call s:Print('SmartGfTitle', 'text') -> 
+"echohl SmartGfTitle | echo 'text' | echohl None
+"must have even ordinal params number (for each pair the first is style the
+"second is text)
+"can accept array instead of params list (works as params list)
 function! s:Print(...)
     let data = type(a:1) == type([]) ? a:1 : a:000
     let pos = 0
@@ -75,32 +116,46 @@ function! s:Print(...)
     echohl None
 endfunction
 
-function! s:DrawResults(word, lines, leftmaxwidth, rightmaxwidth, current_position, start_at)
+"draw search results window 
+"*word* search word
+"*lines* list with results (each line contains text, file, line, col)
+"*left_max_width* max allowed width for text part of line 
+"*right_max_width* max allowed width for file part of line 
+"*current_position* current selected line
+"*start_at* shift from start of the list
+function! s:DrawResults(word, lines, left_max_width, right_max_width, current_position, start_at)
     let index = a:start_at
-    let end_at = a:start_at + g:smartgf_max_entries_per_page
+    let length = len(a:lines)
+    let end_at = length > g:smartgf_max_entries_per_page ? a:start_at + g:smartgf_max_entries_per_page : length
     let divider = repeat(' ', g:smartgf_divider_width)
+
     redraw!
+
     "show "Search result (1-9 of 20) for blabla:"
     call s:Print('SmartGfTitle', 'Search results (' . (a:start_at + 1) . '-' . end_at . ' of ' . len(a:lines) . ') for ',
             \ 'SmartGfSearchWord', a:word, 'SmartGfTitle', ':')
 
+    "for each line show "x. search line     /file/path.txt:1"
     while index < len(a:lines) && index < end_at
         let line = []
         let entry = a:lines[index]
-        let visible_index = index < 9 ? string(index + 1) : 'x'
         let selected_flag = index == a:current_position ? 'Selected' : ''
 
+        "show index for first 9 results (quick way to select result)
+        let visible_index = index < 9 ? string(index + 1) : 'x'
         call add(line, 'SmartGfIndex' . selected_flag)
         call add(line,  visible_index . '. ')
 
+        "cut text if it has symbols more than *left_max_width*
         let text = entry.text
         let length = strlen(text)
-        if length > a:leftmaxwidth
-            let text = strpart(text, 0, a:leftmaxwidth - 3) . '...'
+        if length > a:left_max_width
+            let text = strpart(text, 0, a:left_max_width - 3) . '...'
         else
-            let text .= repeat(' ', a:leftmaxwidth - strlen(text))
+            let text .= repeat(' ', a:left_max_width - strlen(text))
         endif
 
+        "highlight search word in the text
         let startpos = 0
         while 1
             let endpos = stridx(text, a:word, startpos)
@@ -116,16 +171,19 @@ function! s:DrawResults(word, lines, leftmaxwidth, rightmaxwidth, current_positi
             let startpos = endpos + strlen(a:word)
         endwhile
 
-
-        let filestr = entry.file . ':' . entry.ln
-        let length = strlen(filestr)
-        if length > a:rightmaxwidth
-            let filestr = '...' . strpart(filestr, length - a:rightmaxwidth + 3, a:rightmaxwidth - 3)
-        else
-            let filestr = repeat(' ', a:rightmaxwidth - length) . filestr
-        endif
+        "divider between text and file path
         call add(line, 'SmartGfDivider' . selected_flag)
         call add(line, divider)
+
+        "cut file path if it has symbols more than *right_max_width*
+        let filestr = entry.file . ':' . entry.ln
+        let length = strlen(filestr)
+        if length > a:right_max_width
+            let filestr = '...' . strpart(filestr, length - a:right_max_width + 3, a:right_max_width - 3)
+        else
+            let filestr = repeat(' ', a:right_max_width - length) . filestr
+        endif
+
         call add(line, 'SmartGfFilePath' . selected_flag)
         call add(line, filestr)
 
@@ -133,82 +191,103 @@ function! s:DrawResults(word, lines, leftmaxwidth, rightmaxwidth, current_positi
         let index += 1
     endwhile
 
+    "show footer legend "Press 1-9 or use k,l and o,Enter to open file"
     call s:Print(['SmartGfPrompt', 'Press ', 'SmartGfIndex', '1-9', 'SmartGfPrompt', 
                 \ ' or use ', 'SmartGfIndex', 'k', 'SmartGfPrompt', ',', 'SmartGfIndex', 'l', 'SmartGfPrompt', 
-                \ ' and ', 'SmartGfIndex', 'o', 'SmartGfPrompt', ',', 'SmartGfIndex', 'Enter', 'SmartGfPrompt', ' to open file:'])
+                \ ' and ', 'SmartGfIndex', 'o', 'SmartGfPrompt', ',', 'SmartGfIndex', 'Enter', 'SmartGfPrompt', ' to open file'])
 endfunction
 
-function! s:Open(position)
-    let entry = s:lines[a:position]
-    execute 'silent! edit ' . entry.file
-    execute "normal! " . entry.ln . "G" . entry.col . "|zz"
+"open file by path in the new buffer 
+"and set cursor position on the search word
+"also centerized screen
+function! s:Open(entry)
+    execute 'silent! edit ' . a:entry.file
+    execute "normal! " . a:entry.ln . "G" . a:entry.col . "|zz"
 endfunction
 
+"main function: seach word under the cursor with ACK
 function! s:Find()
     let word = expand('<cword>')
+    "skip if this is one symbol
     if strlen(word) < 2 | return | endif
 
-    let type = &ft
-    let types = ''
 
-    let maxwidth = winwidth(0) - g:smartgf_divider_width - 4
+    "get window width and calc max allowed width for results window
+    let max_width = winwidth(0) - g:smartgf_divider_width - 4
+    "left/right sections proportion
     let cells = 10.0
-    let leftcells = 7
-    let leftmaxwidth = float2nr(maxwidth / cells * leftcells)
+    let left_cells = 7
+    let left_max_width = float2nr(max_width / cells * left_cells)
 
+    "detect filetype
+    "use filetype to filter search results
+    let type = &ft
+    let typestrtr = ''
     if type == 'ruby' || type == 'haml'
         let type = 'ruby'
-        let types = ' --ruby --haml'
+        let typestr = ' --ruby --haml'
     elseif type == 'js' || type == 'coffee'
         let type = 'js'
-        let types = ' --js --coffee'
+        let typestr = ' --js --coffee'
     endif
 
-    echohl Title | echo 'Searching...' | echohl None
+    "show search in progress
+    call s:Print('SmartGfTitle', 'Searching...') 
 
-    let out = system(s:ack . shellescape(word) . types)
+    "and run search
+    let out = system(s:ack . shellescape(word) . typestr)
     let lines = []
-    let maxlength = 0
+    let left_real_max_width = 0
     for line in split(out, '\n')
+        "result line:
+        "/file/path.text:line:col:search text
         let [_, file, ln, col, text; rest] = matchlist(line, '\(.\{-}\):\(.\{-}\):\(.\{-}\):\(.*\)')
-        let text = substitute(text, '^\s*', '', 'g')
-        let text = substitute(text, '\s*$', '', 'g')
+        "remove leading spaces
+        "and at the end too
+        let text = substitute(text, '^\s\+\|\s\+$', '', 'g')
 
         "skip comments
+        "for ruby: # or -#
+        "for js: // or #
         if (type == 'ruby' && match(text, '^\s*-\?#') != -1)
             \ || (type == 'js' && match(text, '^\s*\(//\|#\)') != -1)
             continue
         endif
 
-
         let data = { 'file': file, 'ln': ln, 'col': col, 'text': text }
+
+        "set top priority for method/function definition
+        "for ruby: def <search word>( 
         if type == 'ruby' && match(text, 'def \+' . word . '[ (]') != -1
             call insert(lines, data)
         else
             call add(lines, data)
         end
+
+        "calc real max width of text parts of lines
         let length = strlen(text)
-        if length > maxlength | let maxlength = length | endif
+        if length > left_real_max_width | let left_real_max_width = length | endif
     endfor
 
     redraw!
 
+    "if nothing was found show message
     if len(lines) == 0
-        echohl Title | echo 'Nothing was found' | echohl None
+        call s:Print('SmartGfTitle', 'Nothing was found') 
         return
     endif
-    if maxlength > leftmaxwidth | let maxlength = leftmaxwidth | endif
 
-    let rightmaxwidth = maxwidth - maxlength
+    "calc real width for left and right parts (text and file)
+    if left_real_max_width > left_max_width | let left_real_max_width = left_max_width | endif
+    let right_max_width = max_width - left_real_max_width
 
 
-    let s:lines = lines
     let show = 1
     let current_position = 0
     let results_count = len(lines)
     let start_at = 0
     while show 
-        call s:DrawResults(word, lines, maxlength, rightmaxwidth, current_position, start_at)
+        call s:DrawResults(word, lines, left_real_max_width, right_max_width, current_position, start_at)
         let key = getchar()
         let ch = nr2char(key)
         let choice = str2nr(ch)
@@ -231,9 +310,9 @@ function! s:Find()
                 endif
             endif
         elseif ch == 'o' || key == 13
-            call s:Open(current_position)
+            call s:Open(lines[current_position])
         elseif choice > 0 && choice < 10
-            call s:Open(choice - 1)
+            call s:Open(lines[choice - 1])
         endif
     endwhile
 endfunction
