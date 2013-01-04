@@ -25,6 +25,9 @@ if !exists('g:smartgf_key')
     let g:rails_mappings = 0
     let g:smartgf_key = 'gf'
 endif
+if !exists('g:smartgf_no_filter_key')
+    let g:smartgf_no_filter_key = 'gF'
+endif
 
 "define divider width between text and file path in the results
 if !exists('g:smartgf_divider_width')
@@ -206,7 +209,7 @@ function! s:Open(entry)
 endfunction
 
 "main function: seach word under the cursor with ACK
-function! s:Find()
+function! s:Find(use_filter)
     let word = expand('<cword>')
     "skip if this is one symbol
     if strlen(word) < 2 | return | endif
@@ -222,13 +225,17 @@ function! s:Find()
     "detect filetype
     "use filetype to filter search results
     let type = &ft
-    let typestrtr = ''
-    if type == 'ruby' || type == 'haml'
-        let type = 'ruby'
-        let typestr = ' --ruby --haml'
-    elseif type == 'js' || type == 'coffee'
-        let type = 'js'
-        let typestr = ' --js --coffee'
+    let typestr = ''
+    if a:use_filter
+        if type == 'ruby' || type == 'haml'
+            let type = 'ruby'
+            let typestr = ' --ruby --haml'
+        elseif type == 'js' || type == 'coffee'
+            let type = 'js'
+            let typestr = ' --js --coffee'
+        elseif type == 'vim'
+            let typestr = ' --vim'
+        endif
     endif
 
     "show search in progress
@@ -248,9 +255,11 @@ function! s:Find()
 
         "skip comments
         "for ruby: # or -#
-        "for js: // or #
-        if (type == 'ruby' && match(text, '^\s*-\?#') != -1)
-            \ || (type == 'js' && match(text, '^\s*\(//\|#\)') != -1)
+        "for js: // or # or * or /*
+        "for vim: "
+        if a:use_filter && ((type == 'ruby' && match(text, '^-\?#') != -1)
+                       \ || (type == 'js'   && match(text, '^\(//\|#\|/\s*\*\|\*\)') != -1)
+                       \ || (type == 'vim'  && match(text, '^"') != -1))
             continue
         endif
 
@@ -258,7 +267,9 @@ function! s:Find()
 
         "set top priority for method/function definition
         "for ruby: def <search word>( 
-        if type == 'ruby' && match(text, 'def \+' . word . '[ (]') != -1
+        "for vim: function s:func(
+        if a:use_filter && ((type == 'ruby' && match(text, 'def \+' . word . '[ (]') != -1)
+                        \ ||(type == 'vim' && match(text, 'function!\? \+\(.:\)\?' . word . '(') != -1))
             call insert(lines, data)
         else
             call add(lines, data)
@@ -282,10 +293,11 @@ function! s:Find()
     let right_max_width = max_width - left_real_max_width
 
 
-    let show = 1
+    "show results while user select file or press Esc
     let current_position = 0
     let results_count = len(lines)
     let start_at = 0
+    let show = 1
     while show 
         call s:DrawResults(word, lines, left_real_max_width, right_max_width, current_position, start_at)
         let key = getchar()
@@ -293,6 +305,7 @@ function! s:Find()
         let choice = str2nr(ch)
         redraw!
         let show = 0
+        "change position to previous item
         if ch == 'j'
             let show = 1
             if current_position < results_count - 1
@@ -301,6 +314,7 @@ function! s:Find()
                     let start_at += 1
                 endif
             endif
+        "change position to next item
         elseif ch == 'k'
             let show = 1
             if current_position > 0
@@ -309,12 +323,15 @@ function! s:Find()
                     let start_at -= 1
                 endif
             endif
+        "select file under the cursor
         elseif ch == 'o' || key == 13
             call s:Open(lines[current_position])
+        "select file by shortcut
         elseif choice > 0 && choice < 10
             call s:Open(lines[choice - 1])
         endif
     endwhile
 endfunction
 
-nnoremap <silent> gf :<C-U>call <SID>Find()<CR>
+silent exec 'nnoremap <silent> ' . g:smartgf_key . '  :<C-U>call <SID>Find(1)<CR>'
+silent exec 'nnoremap <silent> ' . g:smartgf_no_filter_key . '  :<C-U>call <SID>Find(0)<CR>'
