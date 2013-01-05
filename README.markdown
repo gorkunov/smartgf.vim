@@ -22,7 +22,7 @@ Installation
 ------------
 First of all you need to have installed [ack](http://betterthangrep.com/). So run this:
 
-    #on ubuntu
+    # on ubuntu
     sudo apt-get install ack-grep
 
     # on mac with homebrew
@@ -47,7 +47,7 @@ position in the dialog and o,Enter to choose selected item.
 *Note: By default smartgf uses filter by filetype and sets top priority for method definitions 
 and also skips comments in the search results. If you want to skip those filters use 'gF' instead of 'gf'.*
 
-*Note: If you use **rails.vim** you should know that smartgf disable rails.vim 'gf' mappings.
+*Note: If you use rails.vim you should know that smartgf disable rails.vim 'gf' mappings.
 You can change smartgf mappings (see configuration section) after that rails.vim should works in a normal way.*
 
 Configuration
