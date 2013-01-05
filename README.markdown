@@ -9,7 +9,7 @@ It's better than default gf because:
 
 It's better than ack.vim because:
 
-* It sets top priority for function/method definition.
+* It sets top priority for function/method/class/module definition.
 * It uses filter by filetype by default.
 * It skips comments in the search.
 * You don't need to switch or use quickfix window. It works in command-line mode.

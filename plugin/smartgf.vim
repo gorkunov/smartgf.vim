@@ -218,11 +218,11 @@ function! s:IsComment(text, type)
            \ || (a:type == 'vim'  && match(a:text, '^"') != -1))
 endfunction
 
-"return whether *text* is function *name* definition
-"for ruby: def <search word>( 
-"for vim: function s:func(
-function! s:IsFunction(text, name, type)
+"return whether *text* has priority in the search results
+"it can be a function definition or module or class etc
+function! s:HasPriority(text, name, type)
     return     ((a:type == 'ruby' && match(a:text, 'def \+' . a:name . '[ (]') != -1)
+           \ || (a:type == 'ruby' && match(a:text, '\(module\|class\) \+' . a:name . '\($\| \+\)') != -1)
            \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
 
@@ -279,7 +279,7 @@ function! s:Find(use_filter)
         let data = { 'file': file, 'ln': ln, 'col': col, 'text': text }
 
         "set top priority for method/function definition
-        if a:use_filter && s:IsFunction(text, word, type)
+        if a:use_filter && s:HasPriority(text, word, type)
             call insert(lines, data)
         else
             call add(lines, data)
