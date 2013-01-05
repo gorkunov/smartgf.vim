@@ -208,6 +208,24 @@ function! s:Open(entry)
     execute "normal! " . a:entry.ln . "G" . a:entry.col . "|zz"
 endfunction
 
+"return whether *text* is comment
+"for ruby: # or -#
+"for js: // or # or * or /*
+"for vim: "
+function! s:IsComment(text, type)
+    return     ((a:type == 'ruby' && match(a:text, '^-\?#') != -1)
+           \ || (a:type == 'js'   && match(a:text, '^\(//\|#\|/\s*\*\|\*\)') != -1)
+           \ || (a:type == 'vim'  && match(a:text, '^"') != -1))
+endfunction
+
+"return whether *text* is function *name* definition
+"for ruby: def <search word>( 
+"for vim: function s:func(
+function! s:IsFunction(text, name, type)
+    return     ((a:type == 'ruby' && match(a:text, 'def \+' . a:name . '[ (]') != -1)
+           \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
+endfunction
+
 "main function: seach word under the cursor with ACK
 function! s:Find(use_filter)
     let word = expand('<cword>')
@@ -254,22 +272,14 @@ function! s:Find(use_filter)
         let text = substitute(text, '^\s\+\|\s\+$', '', 'g')
 
         "skip comments
-        "for ruby: # or -#
-        "for js: // or # or * or /*
-        "for vim: "
-        if a:use_filter && ((type == 'ruby' && match(text, '^-\?#') != -1)
-                       \ || (type == 'js'   && match(text, '^\(//\|#\|/\s*\*\|\*\)') != -1)
-                       \ || (type == 'vim'  && match(text, '^"') != -1))
+        if a:use_filter && s:IsComment(text, type)
             continue
         endif
 
         let data = { 'file': file, 'ln': ln, 'col': col, 'text': text }
 
         "set top priority for method/function definition
-        "for ruby: def <search word>( 
-        "for vim: function s:func(
-        if a:use_filter && ((type == 'ruby' && match(text, 'def \+' . word . '[ (]') != -1)
-                        \ ||(type == 'vim' && match(text, 'function!\? \+\(.:\)\?' . word . '(') != -1))
+        if a:use_filter && s:IsFunction(text, word, type)
             call insert(lines, data)
         else
             call add(lines, data)
@@ -333,5 +343,6 @@ function! s:Find(use_filter)
     endwhile
 endfunction
 
+"key mapping
 silent exec 'nnoremap <silent> ' . g:smartgf_key . '  :<C-U>call <SID>Find(1)<CR>'
 silent exec 'nnoremap <silent> ' . g:smartgf_no_filter_key . '  :<C-U>call <SID>Find(0)<CR>'
