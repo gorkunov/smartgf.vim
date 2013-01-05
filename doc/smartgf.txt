@@ -1,0 +1,97 @@
+*smartgf.txt*  gf on steroids!
+*smartgf*
+
+Author:  Alex Gorkunov (alexander.gorkunov@gmail.com)
+Github: http://github.com/gorkunov/smartgf.vim
+
+==============================================================================
+CONTENTS                                                    *smartgf-contents*
+
+    1.Introduction............................|smartgf-introduction|
+    2.Requires................................|smartgf-requires|
+    3.Usage...................................|smartgf-usage|
+    4.Options.................................|smartgf-options|
+    5.License.................................|smartgf-license|
+
+==============================================================================
+1. Introduction                                         *smartgf-introduction*
+
+*smartgf* is a 'goto file' on steroids!
+
+It's better than default gf because:
+
+* It doesn't use ctags. So you don't need to run anything after changes.
+* It shows you all available matches.
+
+It's better than ack.vim because:
+
+* It sets top priority for function/method definition.
+* It uses filter by filetype by default.
+* It skips comments in the search.
+* You don't need to switch or use quickfix window.
+
+==============================================================================
+2. Requires                                                 *smartgf-requires*
+
+You need to have installed ack (http://betterthangrep.com/). So run this:
+
+    #on ubuntu
+    sudo apt-get install ack-grep
+
+    # on mac with homebrew
+    brew install ack
+
+Or see details instruction https://github.com/mileszs/ack.vim.
+
+==============================================================================
+3. Usage                                                       *smartgf-usage*
+
+Smartgf uses default 'gf' combination. Set cursor position under the function 
+or method and type gf in normal mode. After that you will see dialog with
+search results. Use 1-9 keys as quick shortcuts to select search result or 
+use k,l to change cursor position in the dialog and o,Enter to choose 
+selected item.
+
+Note: By default smartgf uses filter by filetype and sets top priority for 
+method definitions and also skips comments in the search results. If you 
+want to skip those filters use 'gF' instead of 'gf'.*
+
+Note: If you use rails.vim you should know that smartgf disable rails.vim 'gf'
+mappings. You can change smartgf mappings (see |smartgf-options|) after that
+rails.vim should works in a normal way.
+
+==============================================================================
+4. Options                                                   *smartgf-options*
+
+                                                               *'smartgf_key'*
+Default: 'gf'
+Key for running smartpaigf with all filters (ft/comments/def) >
+    let g:smartgf_key = 'gf'
+<
+
+                                                     *'smartgf_no_filter_key'*
+Default: 'gF'
+Key for running smartpaigf without filters >
+    let g:smartgf_no_filter_key = 'gF'
+<
+
+                                              *'smartgf_max_entries_per_page'*
+Default: 9
+Max entries count to display (search results dialog) >
+    let g:smartgf_max_entries_per_page = 9
+<
+
+
+                                                     *'smartgf_divider_width'*
+Default: 5
+Min space between text and file path in the search results list >
+    let g:smartgf_divider_width = 5
+<
+
+==============================================================================
+5. License                                                   *smartgf-license*
+
+smartgf is released under the wtfpl.
+See http://sam.zoy.org/wtfpl/COPYING.
+
+==============================================================================
