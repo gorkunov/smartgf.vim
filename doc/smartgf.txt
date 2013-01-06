@@ -16,7 +16,7 @@ CONTENTS                                                    *smartgf-contents*
 ==============================================================================
 1. Introduction                                         *smartgf-introduction*
 
-*smartgf* is a 'goto file' on steroids!
+smartgf is a 'goto file' on steroids!
 
 It's better than default gf because:
 
@@ -54,7 +54,7 @@ selected item.
 
 Note: By default smartgf uses filter by filetype and sets top priority for 
 method definitions and also skips comments in the search results. If you 
-want to skip those filters use 'gF' instead of 'gf'.*
+want to skip those filters use 'gF' instead of 'gf'.
 
 Note: If you use rails.vim you should know that smartgf disable rails.vim 'gf'
 mappings. You can change smartgf mappings (see |smartgf-options|) after that
