@@ -60,6 +60,9 @@ Note: If you use rails.vim you should know that smartgf disable rails.vim 'gf'
 mappings. You can change smartgf mappings (see |smartgf-options|) after that
 rails.vim should works in a normal way.
 
+Note: filetype/comments/priority filters are available only for vim,
+javascript/coffee and ruby files.
+
 ==============================================================================
 4. Options                                                   *smartgf-options*
 
