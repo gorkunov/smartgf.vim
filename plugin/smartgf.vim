@@ -194,9 +194,9 @@ function! s:DrawResults(word, lines, left_max_width, right_max_width, current_po
         let index += 1
     endwhile
 
-    "show footer legend "Press 1-9 or use k,l and o,Enter to open file"
+    "show footer legend "Press 1-9 or use j,k and o,Enter to open file"
     call s:Print(['SmartGfPrompt', 'Press ', 'SmartGfIndex', '1-9', 'SmartGfPrompt', 
-                \ ' or use ', 'SmartGfIndex', 'k', 'SmartGfPrompt', ',', 'SmartGfIndex', 'l', 'SmartGfPrompt', 
+                \ ' or use ', 'SmartGfIndex', 'j', 'SmartGfPrompt', ',', 'SmartGfIndex', 'k', 'SmartGfPrompt', 
                 \ ' and ', 'SmartGfIndex', 'o', 'SmartGfPrompt', ',', 'SmartGfIndex', 'Enter', 'SmartGfPrompt', ' to open file'])
 endfunction
 

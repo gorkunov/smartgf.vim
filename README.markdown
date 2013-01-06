@@ -41,7 +41,7 @@ Usage
 -----
 Smartgf uses default 'gf' combination. Set cursor position under the function 
 or method and type gf in normal mode. After that you will see dialog with search results. 
-Use 1-9 keys as quick shortcuts to select search result or use k,l to change cursor 
+Use 1-9 keys as quick shortcuts to select search result or use j,k to change cursor 
 position in the dialog and o,Enter to choose selected item.
 
 *Note: By default smartgf uses filter by filetype and sets top priority for method definitions 
