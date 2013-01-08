@@ -228,6 +228,12 @@ endfunction
 
 "main function: seach word under the cursor with ACK
 function! s:Find(use_filter)
+    let filename = expand(expand('<cfile>'))
+    if filereadable(filename)
+        execute 'edit ' . filename
+        return
+    endif
+
     let word = expand('<cword>')
     "skip if this is one symbol
     if strlen(word) < 2 | return | endif
