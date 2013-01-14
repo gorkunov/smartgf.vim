@@ -34,6 +34,19 @@ if !exists('g:smartgf_divider_width')
     let g:smartgf_divider_width = 5
 endif
 
+"disable gems search by default
+if !exists('g:smartgf_enable_gems_search')
+    let g:smartgf_enable_gems_search = 0
+endif
+
+"define default tags and date file (for gems search)
+if !exists('g:smartgf_tags_file')
+    let g:smartgf_tags_file = '.smartgf_tags'
+endif
+if !exists('g:smartgf_date_file')
+    let g:smartgf_date_file = g:smartgf_tags_file . '_date'
+endif
+
 "detect system ack (thanks Ack.vim)
 let s:ack = executable('ack-grep') ? 'ack-grep' : 'ack'
 let s:ack .= ' -H --nocolor --nogroup --column '
@@ -179,10 +192,24 @@ function! s:DrawResults(word, lines, left_max_width, right_max_width, current_po
         call add(line, divider)
 
         "cut file path if it has symbols more than *right_max_width*
-        let filestr = entry.file . ':' . entry.ln
+        let filestr = entry.file
+        if entry['ln'] != 'no'
+            let filestr .= ':' . entry.ln
+        endif
         let length = strlen(filestr)
+        "cut file path if it's bigger than max allowed length
         if length > a:right_max_width
-            let filestr = '...' . strpart(filestr, length - a:right_max_width + 3, a:right_max_width - 3)
+
+            "use different cutting strategy for gem paths and others
+            "for gems cutted path looks like: GEMS/actionpack-1.0.2/lib...bla/bla.rb
+            "for others: ...bla/bla.rb
+            if has_key(entry, 'gem')
+                let right_length = a:right_max_width / 2
+                let left_length = a:right_max_width - right_length - 3
+                let filestr = strpart(filestr, 0, left_length) . '...' . strpart(filestr, length - right_length, right_length)
+            else
+                let filestr = '...' . strpart(filestr, length - a:right_max_width + 3, a:right_max_width - 3)
+            endif
         else
             let filestr = repeat(' ', a:right_max_width - length) . filestr
         endif
@@ -204,8 +231,19 @@ endfunction
 "and set cursor position on the search word
 "also centerized screen
 function! s:Open(entry)
-    execute 'silent! edit ' . a:entry.file
-    execute "normal! " . a:entry.ln . "G" . a:entry.col . "|zz"
+    if has_key(a:entry, 'real_path')
+        let path = a:entry.real_path
+    else
+        let path = a:entry.file
+    endif
+
+    execute 'silent! edit ' . path
+    if a:entry['ln'] == 'no'
+        call search(a:entry.text)
+    else
+        execute "normal! " . a:entry.ln . "G" . a:entry.col . "|"
+    endif
+    normal! zz
 endfunction
 
 "return whether *text* is comment
@@ -228,6 +266,7 @@ endfunction
 
 "main function: seach word under the cursor with ACK
 function! s:Find(use_filter)
+    "first of all trying to open file under cursor (default gf)
     let filename = expand(expand('<cfile>'))
     if filereadable(filename)
         execute 'edit ' . filename
@@ -267,8 +306,10 @@ function! s:Find(use_filter)
 
     "and run search
     let out = system(s:ack . shellescape(word) . typestr)
-    let lines = []
     let left_real_max_width = 0
+    let definitions = []
+    let gem_definitions = []
+    let common = []
     for line in split(out, '\n')
         "result line:
         "/file/path.text:line:col:search text
@@ -286,15 +327,38 @@ function! s:Find(use_filter)
 
         "set top priority for method/function definition
         if a:use_filter && s:HasPriority(text, word, type)
-            call insert(lines, data)
+            call add(definitions, data)
         else
-            call add(lines, data)
+            call add(common, data)
         end
 
         "calc real max width of text parts of lines
         let length = strlen(text)
         if length > left_real_max_width | let left_real_max_width = length | endif
     endfor
+
+    "also search in the GEMS (with ctags)
+    if g:smartgf_enable_gems_search && type == 'ruby' && filereadable(g:smartgf_tags_file)
+        "search by first column in the ctags file
+        let out = system(s:ack . ' "^' . word . '\t" ' . g:smartgf_tags_file)
+        for line in split(out, '\n')
+            "ctags file has format:
+            "<search target>  <path>  <search pattern>"<rest>
+            "so get this line from text property in the ack output
+            let [_, file, ln, col, text; rest] = matchlist(line, '\(.\{-}\):\(.\{-}\):\(.\{-}\):\(.*\)')
+            let [_, real_path; rest] = split(text, '\t')
+            "convert <search pattern> to real text which will be displayed
+            let text = matchstr(join(rest, ''), '\/\^\s*\zs.*\ze\s*\$\/')
+            "make path more readable (replace absolute url to GEMS/ prefix)
+            let path = 'GEMS/' . matchstr(real_path, '.*/gems/\zs.*') 
+            "we have no line/col for this entry, so we will use search pattern 
+            "to navigate the result
+            let data = { 'file': path, 'real_path': real_path, 'ln': 'no', 'col': 'no', 'text': text, 'gem': 1 }
+            call add(gem_definitions, data)
+        endfor
+    endif
+
+    let lines = definitions + gem_definitions + common
 
     redraw!
 
@@ -348,6 +412,43 @@ function! s:Find(use_filter)
         endif
     endwhile
 endfunction
+
+"Update tags when it needed
+"use bundle to get gems paths and ctags to generate tags
+function! s:ValidateTagsFile()
+    "work only with Gemfile stuff
+    let gemfile = 'Gemfile.lock'
+    if !filereadable(gemfile) | return | endif 
+
+    "validate ctags
+    if match(system('ctags --version'), 'Exuberant') == -1
+        call s:Print('SmartGfTitle', "Smartgf can't genarate tags. Ctags is not valid. Please install Exuberant Ctags.")
+        return
+    endif
+
+    "check Gemfile.lock modified_at 
+    let gemfile_updated_at = system('stat -f "%m" ' . gemfile)
+    let last_updated_at = ''
+
+    "read previous last saved modified_at from our file
+    if filereadable(g:smartgf_date_file)
+        let [last_updated_at; rest] = readfile(g:smartgf_date_file)
+    endif
+
+    "run tags generation if last date is not the same
+    if gemfile_updated_at != last_updated_at
+        call s:Print('SmartGfTitle', 'Updating tags...') 
+        "get path via bundle and load them to ctags
+        call system('bundle show --paths | xargs ctags -R --languages=ruby -o ' . g:smartgf_tags_file)
+        call writefile([ gemfile_updated_at ], g:smartgf_date_file)
+        call s:Print('SmartGfTitle', 'Tags was updated') 
+    endif
+
+endfunction
+
+if g:smartgf_enable_gems_search
+    autocmd FocusGained * call s:ValidateTagsFile()
+endif
 
 "key mapping
 silent exec 'nnoremap <silent> ' . g:smartgf_key . '  :<C-U>call <SID>Find(1)<CR>'
