@@ -16,19 +16,8 @@ CONTENTS                                                    *smartgf-contents*
 ==============================================================================
 1. Introduction                                         *smartgf-introduction*
 
-smartgf is a 'goto file' on steroids!
-
-It's better than default gf because:
-
-* It doesn't use ctags. So you don't need to run anything after changes.
-* It shows you all available matches.
-
-It's better than ack.vim because:
-
-* It sets top priority for function/method/class/module definition.
-* It uses filter by filetype by default.
-* It skips comments in the search.
-* You don't need to switch or use quickfix window.
+**Smartgf** is a tool for quick method difinition lookup. 
+It uses mix of ack, ctags and it was designed for RubyOnRails developers.
 
 ==============================================================================
 2. Requires                                                 *smartgf-requires*
@@ -42,6 +31,15 @@ You need to have installed ack (http://betterthangrep.com/). So run this:
     brew install ack
 
 Or see details instruction https://github.com/mileszs/ack.vim.
+
+If you Rails/Ruby developer you should 
+install ctags (http://ctags.sourceforge.net/):
+
+    # on ubuntu
+    sudo apt-get install ctags
+
+    # on mac with homebrew
+    brew install ctags
 
 ==============================================================================
 3. Usage                                                       *smartgf-usage*
@@ -63,6 +61,10 @@ rails.vim should works in a normal way.
 Note: filetype/comments/priority filters are available only for vim,
 javascript/coffee and ruby files.
 
+Note: If you use gems search and any CVS integration (git, svn) you need
+to mark as ingored .smartgf_tags and .smartgf_tags_date
+(add to .gitingore for git).
+
 ==============================================================================
 4. Options                                                   *smartgf-options*
 
@@ -76,6 +78,11 @@ Key for running smartpaigf with all filters (ft/comments/def) >
 Default: 'gF'
 Key for running smartpaigf without filters >
     let g:smartgf_no_filter_key = 'gF'
+<
+                                                *'smartgf_enable_gems_search'*
+Default: 1
+Enable search with ruby gems from Gemfile >
+    let g:smartgf_enable_gems_search = 1
 <
 
                                               *'smartgf_max_entries_per_page'*

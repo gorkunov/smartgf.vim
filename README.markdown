@@ -1,22 +1,22 @@
-About
------
-**smartgf** is a 'goto file' on steroids!
-
-It's better than default gf because:
-
-* It doesn't use ctags. So you don't need to run anything after changes.
-* It shows you all available matches.
-
-It's better than ack.vim because:
-
-* It sets top priority for function/method/class/module definition.
-* It uses filter by filetype by default.
-* It skips comments in the search.
-* You don't need to switch or use quickfix window. It works in command-line mode.
+About. Short Story
+------------------
+**Smartgf** is a tool for quick method difinition lookup. It uses mix of ack, ctags and it was designed for RubyOnRails developers.
 
 ![smartgf.vim](https://github.com/gorkunov/smartgf.vim/raw/master/_assets/smartgf.png)
  
 Watch [this screencast](https://vimeo.com/56636037) for more details.
+
+About. Long Story
+------------------
+Since I had been starting using Vim I was searching a best tool/way for quick method definion lookup.
+This feature was always an advantage of big IDE systems like RubyMine(IDEA) or VisualStudio. 
+Vim has some basic scenarios based on ctags or vimgrep 
+which fail in most cases and look useless especially for me as ruby developer.
+One day I started designing Smartgf. It combines tools for best results. 
+It uses ack instead of grep because ack is faster. It skips comments and prioritizes method definitions. 
+It also uses filetype filters. It uses ctags only for gems (from Gemfile).
+
+Since I have been starting using Smargf I love it.
 
 Installation
 ------------
@@ -29,6 +29,14 @@ First of all you need to have installed [ack](http://betterthangrep.com/). So ru
     brew install ack
 
 Or see details instruction [here](https://github.com/mileszs/ack.vim).
+
+If you Rails/Ruby developer you should install [ctags](http://ctags.sourceforge.net/)
+
+    # on ubuntu
+    sudo apt-get install ctags
+
+    # on mac with homebrew
+    brew install ctags
 
 For quick plugin installing use [pathogen.vim](https://github.com/tpope/vim-pathogen).
 
@@ -52,6 +60,9 @@ You can change smartgf mappings (see configuration section) after that rails.vim
 
 *Note: filetype/comments/priority filters are available only for vim, javascript/coffee and ruby files.*
 
+*Note: If you use gems search and any CVS integration (git, svn) you need
+to mark as ingored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .gitingore for git).*
+
 Configuration
 -------------
 If you want to change default smartgf settings add those lines to your vimrc file.
@@ -66,6 +77,10 @@ let g:smartgf_key = 'gf'
 "Key for running smartpaigf without filters
 "default is 'gF'
 let g:smartgf_no_filter_key = 'gF'
+
+"Enable search with ruby gems from Gemfile
+"default is 1
+let g:smartgf_enable_gems_search = 1
 
 "Max entries count to display (search results dialog)
 "default is 9
