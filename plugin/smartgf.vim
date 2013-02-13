@@ -259,7 +259,7 @@ endfunction
 "return whether *text* has priority in the search results
 "it can be a function definition or module or class etc
 function! s:HasPriority(text, name, type)
-    return     ((a:type == 'ruby' && match(a:text, 'def \+' . a:name . '[ (]') != -1)
+    return     ((a:type == 'ruby' && match(a:text, 'def \+' . a:name . '\($\|[ (!\?]\)') != -1)
            \ || (a:type == 'ruby' && match(a:text, '\(module\|class\) \+' . a:name . '\($\| \+\)') != -1)
            \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
@@ -279,7 +279,7 @@ function! s:Find(use_filter)
 
 
     "get window width and calc max allowed width for results window
-    let max_width = winwidth(0) - g:smartgf_divider_width - 4
+    let max_width = &columns - g:smartgf_divider_width - 4
     "left/right sections proportion
     let cells = 10.0
     let left_cells = 7
@@ -305,7 +305,9 @@ function! s:Find(use_filter)
     call s:Print('SmartGfTitle', 'Searching...') 
 
     "and run search
-    let out = system(s:ack . shellescape(word) . typestr)
+    "escape some symbols like $
+    let escaped_word = substitute(word, '\(\$\)', '\\\1', 'g')
+    let out = system(s:ack . shellescape(escaped_word) . typestr)
     let left_real_max_width = 0
     let definitions = []
     let gem_definitions = []
@@ -416,33 +418,44 @@ endfunction
 "Update tags when it needed
 "use bundle to get gems paths and ctags to generate tags
 function! s:ValidateTagsFile()
+    call s:Print('SmartGfTitle', 'Checking tags...') 
     "work only with Gemfile stuff
     let gemfile = 'Gemfile.lock'
     if !filereadable(gemfile) | return | endif 
 
-    "validate ctags
-    if match(system('ctags --version'), 'Exuberant') == -1
-        call s:Print('SmartGfTitle', "Smartgf can't genarate tags. Ctags is not valid. Please install Exuberant Ctags.")
-        return
-    endif
 
     "check Gemfile.lock modified_at 
     let gemfile_updated_at = system('stat -f "%m" ' . gemfile)
     let last_updated_at = ''
 
     "read previous last saved modified_at from our file
-    if filereadable(g:smartgf_date_file)
+    if exists('g:smartgf_tags_last_updated_at')
+        let last_updated_at = g:smartgf_tags_last_updated_at
+    elseif filereadable(g:smartgf_date_file)
         let [last_updated_at; rest] = readfile(g:smartgf_date_file)
+        let g:smartgf_tags_last_updated_at = last_updated_at
     endif
 
     "run tags generation if last date is not the same
     if gemfile_updated_at != last_updated_at
+        "validate bundle status
+        call system('bundle check')
+        if v:shell_error == 1
+            call s:Print('SmartGfTitle', "Smartgf can't genarate tags. Some gems are missing. Install missing gems with `bundle install`.")
+            return
+        endif
+        "validate ctags
+        if match(system('ctags --version'), 'Exuberant') == -1
+            call s:Print('SmartGfTitle', "Smartgf can't genarate tags. Ctags is not valid. Please install Exuberant Ctags.")
+            return
+        endif
         call s:Print('SmartGfTitle', 'Updating tags...') 
         "get path via bundle and load them to ctags
         call system('bundle show --paths | xargs ctags -R --languages=ruby -o ' . g:smartgf_tags_file)
         call writefile([ gemfile_updated_at ], g:smartgf_date_file)
-        call s:Print('SmartGfTitle', 'Tags was updated') 
+        let g:smartgf_tags_last_updated_at = gemfile_updated_at
     endif
+    call s:Print('SmartGfTitle', ' ') 
 
 endfunction
 
