@@ -387,8 +387,8 @@ function! s:Find(use_filter)
         let choice = str2nr(ch)
         redraw!
         let show = 0
-        "change position to previous item
-        if ch == 'j'
+        "change position to next item
+        if ch == 'j' || key == "\<Down>"
             let show = 1
             if current_position < results_count - 1
                 let current_position += 1
@@ -396,8 +396,8 @@ function! s:Find(use_filter)
                     let start_at += 1
                 endif
             endif
-        "change position to next item
-        elseif ch == 'k'
+        "change position to previous item
+        elseif ch == 'k' || key == "\<Up>"
             let show = 1
             if current_position > 0
                 let current_position -= 1
