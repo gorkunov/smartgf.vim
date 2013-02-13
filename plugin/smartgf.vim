@@ -34,9 +34,9 @@ if !exists('g:smartgf_divider_width')
     let g:smartgf_divider_width = 5
 endif
 
-"disable gems search by default
+"enable gems search by default
 if !exists('g:smartgf_enable_gems_search')
-    let g:smartgf_enable_gems_search = 0
+    let g:smartgf_enable_gems_search = 1
 endif
 
 "define default tags and date file (for gems search)
@@ -418,10 +418,11 @@ endfunction
 "Update tags when it needed
 "use bundle to get gems paths and ctags to generate tags
 function! s:ValidateTagsFile()
-    call s:Print('SmartGfTitle', 'Checking tags...') 
     "work only with Gemfile stuff
     let gemfile = 'Gemfile.lock'
     if !filereadable(gemfile) | return | endif 
+
+    call s:Print('SmartGfTitle', 'Checking tags...') 
 
 
     "check Gemfile.lock modified_at 
