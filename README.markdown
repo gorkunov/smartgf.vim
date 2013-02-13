@@ -9,9 +9,11 @@ Watch [this screencast](https://vimeo.com/56636037) for more details.
 About. Long Story
 ------------------
 Since I had been starting using Vim I was searching a best tool/way for quick method definion lookup.
+
 This feature was always an advantage of big IDE systems like RubyMine(IDEA) or VisualStudio. 
 Vim has some basic scenarios based on ctags or vimgrep 
 which fail in most cases and look useless especially for me as ruby developer.
+
 One day I started designing Smartgf. It combines tools for best results. 
 It uses ack instead of grep because ack is faster. It skips comments and prioritizes method definitions. 
 It also uses filetype filters. It uses ctags only for gems (from Gemfile).
