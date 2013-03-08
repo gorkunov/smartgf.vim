@@ -1,4 +1,3 @@
-*smartgf.txt*  gf on steroids!
 *smartgf*
 
 Author:  Alex Gorkunov (alexander.gorkunov@gmail.com)
@@ -17,20 +16,19 @@ CONTENTS                                                    *smartgf-contents*
 1. Introduction                                         *smartgf-introduction*
 
 **Smartgf** is a tool for quick method difinition lookup. 
-It uses mix of ack, ctags and it was designed for RubyOnRails developers.
+It uses mix of the_silver_searcher, ctags and it was designed especially
+for Ruby developers.
 
 ==============================================================================
 2. Requires                                                 *smartgf-requires*
 
-You need to have installed ack (http://betterthangrep.com/). So run this:
-
-    #on ubuntu
-    sudo apt-get install ack-grep
+You need to have installed the_silver_searcher.
+So run this:
 
     # on mac with homebrew
-    brew install ack
+    brew install the_silver_searcher
 
-Or see details instruction https://github.com/mileszs/ack.vim.
+Or see details instruction https://github.com/ggreer/the_silver_searcher.
 
 If you Rails/Ruby developer you should 
 install ctags (http://ctags.sourceforge.net/):

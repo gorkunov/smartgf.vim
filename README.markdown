@@ -1,6 +1,6 @@
 About. Short Story
 ------------------
-**Smartgf** is a tool for quick method difinition lookup. It uses mix of ack, ctags and it was designed for RubyOnRails developers.
+**Smartgf** is a tool for quick method difinition lookup. It uses mix of ag (faster than ack which faster than grep), ctags and it was designed for Ruby developers.
 
 ![smartgf.vim](https://github.com/gorkunov/smartgf.vim/raw/master/_assets/smartgf.png)
  
@@ -15,22 +15,18 @@ Vim has some basic scenarios based on ctags or vimgrep
 which fail in most cases and look useless especially for me as ruby developer.
 
 One day I started designing Smartgf. It combines tools for best results. 
-It uses ack instead of grep because ack is faster. It skips comments and prioritizes method definitions. 
-It also uses filetype filters. It uses ctags only for gems (from Gemfile).
+It combines best tools such as the\_sivler\_searcher, ctags and inline-filters (by filetype, skip comment, set top definitions).
 
 Since I have been starting using Smargf I love it.
 
 Installation
 ------------
-First of all you need to have installed [ack](http://betterthangrep.com/). So run this:
-
-    # on ubuntu
-    sudo apt-get install ack-grep
+First of all you need to have installed [ag](https://github.com/ggreer/the_silver_searcher). So run this:
 
     # on mac with homebrew
-    brew install ack
+    brew install the_silver_searcher
 
-Or see details instruction [here](https://github.com/mileszs/ack.vim).
+Or see details instruction [here](https://github.com/ggreer/the_silver_searcher).
 
 If you Rails/Ruby developer you should install [ctags](http://ctags.sourceforge.net/)
 
