@@ -15,7 +15,7 @@ CONTENTS                                                    *smartgf-contents*
 ==============================================================================
 1. Introduction                                         *smartgf-introduction*
 
-**Smartgf** is a tool for quick method difinition lookup. 
+**Smartgf** is a tool for quick method definition lookup. 
 It uses mix of the_silver_searcher, ctags and it was designed especially
 for Ruby developers.
 

@@ -1,6 +1,6 @@
 About. Short Story
 ------------------
-**Smartgf** is a tool for quick method difinition lookup. It uses mix of ag (faster than ack which faster than grep), ctags and it was designed for Ruby developers.
+**Smartgf** is a tool for quick method definition lookup. It uses mix of ag (faster than ack which faster than grep), ctags and it was designed for Ruby developers.
 
 ![smartgf.vim](https://github.com/gorkunov/smartgf.vim/raw/master/_assets/smartgf.png)
  
