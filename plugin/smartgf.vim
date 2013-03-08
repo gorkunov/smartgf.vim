@@ -52,7 +52,7 @@ if !executable('ag')
     echo "Smartgf can't find `the silver searcher` engine, see details on https://github.com/ggreer/the_silver_searcher"
     finish
 endif
-let s:ag = 'ag --nocolor --nogroup --column '
+let s:ag = 'ag'
 
 "get dictionary with color settings from hi group
 function! s:ExtractColorsFromHighlightGroup(group)
@@ -275,16 +275,6 @@ function! s:HasPriority(text, name, type)
            \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
 
-"run external command (ag) to search word
-function! s:RunSearch(word, path)
-    "ag doesn't work with system() invokation
-    "return system(command)
-    "so use real vim command-line invokation
-    let command = s:ag . a:word . ' ' . a:path
-    redir => out | exe 'silent !' . command  | redir END
-    return split(out, '\r\n')[1:]
-endfunction
-
 "main function: seach word under the cursor with AG
 function! s:Find(use_filter)
     "first of all trying to open file under cursor (default gf)
@@ -322,28 +312,31 @@ function! s:Find(use_filter)
 
     "escape some symbols like $
     let escaped_word = substitute(word, '\(\$\)', '\\\1', 'g')
-    let out = s:RunSearch(shellescape(escaped_word), './')
+    let out = system(s:ag . ' --ackmate ' . shellescape(escaped_word) . ' ./')
 
     let left_real_max_width = 0
     let definitions = []
     let gem_definitions = []
     let common = []
-    for line in out
-        "result line:
-        "/file/path.text:line:col:search text
-        let [_, file, ln, col, text; rest] = matchlist(line, '\./\(.\{-}\):\(.\{-}\):\(.\{-}\):\(.*\)')
-
-        "skip non-matched filetypes
-        if a:use_filter && s:InvalidFileType(file, type)
+    let file = ''
+    for line in split(out, '\n')
+        if strlen(line) == 0
             continue
-        endif
-
-        "remove leading spaces
-        "and at the end too
-        let text = substitute(text, '^\s\+\|\s\+$', '', 'g')
-
-        "skip comments
-        if a:use_filter && s:IsComment(text, type)
+        elseif line[0] == ':'
+            "detect file path and skip ./ at the begining of the path
+            let file = line[3:]
+            "skip non-matched filetypes
+            if a:use_filter && s:InvalidFileType(file, type)
+                let file = ''
+            endif
+            continue
+        elseif file != ''
+            let [_, ln, col, text; rest] = matchlist(line, '\(.\{-}\);\(.\{-}\) .\{-}:\s*\(.*\)\s*')
+            "skip comments
+            if a:use_filter && s:IsComment(text, type)
+                continue
+            endif
+        else
             continue
         endif
 
@@ -364,12 +357,12 @@ function! s:Find(use_filter)
     "also search in the GEMS (with ctags)
     if g:smartgf_enable_gems_search && type == 'ruby' && filereadable(g:smartgf_tags_file)
         "search by first column in the ctags file
-        let out = s:RunSearch(' "^' . word . '\t" ', './'. g:smartgf_tags_file)
-        for line in out
+        let out = system(s:ag . ' --ackmate "^' . word . '\t" ' . ' ./'. g:smartgf_tags_file)
+        for line in split(out, '\n')
             "ctags file has format:
             "<search target>  <path>  <search pattern>"<rest>
             "so get this line from text property in the ag output
-            let [_, ln, col, text; rest] = matchlist(line, '\(.\{-}\):\(.\{-}\):\(.*\)')
+            let text = matchstr(line, '.\{-}:\zs.*')
             let [_, real_path; rest] = split(text, '\t')
             "convert <search pattern> to real text which will be displayed
             let text = matchstr(join(rest, ''), '\/\^\s*\zs.*\ze\s*\$\/')
