@@ -6,9 +6,9 @@
 "vim: set tabstop=4 softtabstop=4 shiftwidth=4 expandtab
 
 "avoid installing twice
-"if exists('g:loaded_smartgf')
-    "finish
-"endif
+if exists('g:loaded_smartgf')
+    finish
+endif
 "check if debugging is turned off
 if !exists('g:smartgf_debug')
     let g:loaded_smartgf = 1
@@ -47,10 +47,12 @@ if !exists('g:smartgf_date_file')
     let g:smartgf_date_file = g:smartgf_tags_file . '_date'
 endif
 
-"detect system ack (thanks Ack.vim)
-let s:ack = executable('ack-grep') ? 'ack-grep' : 'ack'
-let s:ack .= ' -H --nocolor --nogroup --column '
-
+"detect the silver searcher
+if !executable('ag')
+    echo "Smartgf can't find `the silver searcher` engine, see details on https://github.com/ggreer/the_silver_searcher"
+    finish
+endif
+let s:ag = 'ag --nocolor --nogroup --column '
 
 "get dictionary with color settings from hi group
 function! s:ExtractColorsFromHighlightGroup(group)
@@ -239,11 +241,20 @@ function! s:Open(entry)
 
     execute 'silent! edit ' . path
     if a:entry['ln'] == 'no'
-        call search(a:entry.text)
+        call search(escape(a:entry.text, '*'))
+        let @/ = ""
     else
         execute "normal! " . a:entry.ln . "G" . a:entry.col . "|"
     endif
     normal! zz
+endfunction
+
+"Filter by filetype
+function! s:InvalidFileType(file, type)
+    let ext = matchstr(a:file, '\.\zs[^.]\+\ze$')
+    return  (a:type == 'ruby' && index(['rb', 'rake', 'erb', 'haml', 'rabl'], ext) == -1 && index(['Rakefile', 'Gemfile', 'Vagrantfile'], a:file) == -1)
+            \ || (a:type == 'js' && index(['coffee', 'js'], ext) == -1)
+            \ || (a:type == 'vim' && ext != 'vim')
 endfunction
 
 "return whether *text* is comment
@@ -264,7 +275,17 @@ function! s:HasPriority(text, name, type)
            \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
 
-"main function: seach word under the cursor with ACK
+"run external command (ag) to search word
+function! s:RunSearch(word, path)
+    "ag doesn't work with system() invokation
+    "return system(command)
+    "so use real vim command-line invokation
+    let command = s:ag . a:word . ' ' . a:path
+    redir => out | exe 'silent !' . command  | redir END
+    return split(out, '\r\n')[1:]
+endfunction
+
+"main function: seach word under the cursor with AG
 function! s:Find(use_filter)
     "first of all trying to open file under cursor (default gf)
     let filename = expand(expand('<cfile>'))
@@ -288,34 +309,35 @@ function! s:Find(use_filter)
     "detect filetype
     "use filetype to filter search results
     let type = &ft
-    let typestr = ''
     if a:use_filter
         if type == 'ruby' || type == 'haml'
             let type = 'ruby'
-            let typestr = ' --ruby --haml'
         elseif type == 'js' || type == 'coffee'
             let type = 'js'
-            let typestr = ' --js --coffee'
-        elseif type == 'vim'
-            let typestr = ' --vim'
         endif
     endif
 
     "show search in progress
     call s:Print('SmartGfTitle', 'Searching...') 
 
-    "and run search
     "escape some symbols like $
     let escaped_word = substitute(word, '\(\$\)', '\\\1', 'g')
-    let out = system(s:ack . shellescape(escaped_word) . typestr)
+    let out = s:RunSearch(shellescape(escaped_word), './')
+
     let left_real_max_width = 0
     let definitions = []
     let gem_definitions = []
     let common = []
-    for line in split(out, '\n')
+    for line in out
         "result line:
         "/file/path.text:line:col:search text
-        let [_, file, ln, col, text; rest] = matchlist(line, '\(.\{-}\):\(.\{-}\):\(.\{-}\):\(.*\)')
+        let [_, file, ln, col, text; rest] = matchlist(line, '\./\(.\{-}\):\(.\{-}\):\(.\{-}\):\(.*\)')
+
+        "skip non-matched filetypes
+        if a:use_filter && s:InvalidFileType(file, type)
+            continue
+        endif
+
         "remove leading spaces
         "and at the end too
         let text = substitute(text, '^\s\+\|\s\+$', '', 'g')
@@ -342,12 +364,12 @@ function! s:Find(use_filter)
     "also search in the GEMS (with ctags)
     if g:smartgf_enable_gems_search && type == 'ruby' && filereadable(g:smartgf_tags_file)
         "search by first column in the ctags file
-        let out = system(s:ack . ' "^' . word . '\t" ' . g:smartgf_tags_file)
-        for line in split(out, '\n')
+        let out = s:RunSearch(' "^' . word . '\t" ', './'. g:smartgf_tags_file)
+        for line in out
             "ctags file has format:
             "<search target>  <path>  <search pattern>"<rest>
-            "so get this line from text property in the ack output
-            let [_, file, ln, col, text; rest] = matchlist(line, '\(.\{-}\):\(.\{-}\):\(.\{-}\):\(.*\)')
+            "so get this line from text property in the ag output
+            let [_, ln, col, text; rest] = matchlist(line, '\(.\{-}\):\(.\{-}\):\(.*\)')
             let [_, real_path; rest] = split(text, '\t')
             "convert <search pattern> to real text which will be displayed
             let text = matchstr(join(rest, ''), '\/\^\s*\zs.*\ze\s*\$\/')
