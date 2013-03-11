@@ -49,7 +49,13 @@ endif
 
 "detect the silver searcher
 if !executable('ag')
-    echo "Smartgf can't find `the silver searcher` engine, see details on https://github.com/ggreer/the_silver_searcher"
+    echo "Smartgf can't find `the_silver_searcher` engine, see details on https://github.com/ggreer/the_silver_searcher"
+    finish
+endif
+
+let s:ag_version = system("ag --version | sed 's/ag version //'")
+if s:ag_version < '0.14'
+    echo "Smartgf can't work with old `the_silver_searcher` (version < 0.14). Please update it."
     finish
 endif
 let s:ag = 'ag'
@@ -312,7 +318,7 @@ function! s:Find(use_filter)
 
     "escape some symbols like $
     let escaped_word = substitute(word, '\(\$\)', '\\\1', 'g')
-    let out = system(s:ag . ' --ackmate ' . shellescape(escaped_word) . ' ./')
+    let out = system(s:ag . ' --ackmate ' . shellescape(escaped_word))
 
     let left_real_max_width = 0
     let definitions = []
@@ -324,7 +330,7 @@ function! s:Find(use_filter)
             continue
         elseif line[0] == ':'
             "detect file path and skip ./ at the begining of the path
-            let file = line[3:]
+            let file = line[1:]
             "skip non-matched filetypes
             if a:use_filter && s:InvalidFileType(file, type)
                 let file = ''
