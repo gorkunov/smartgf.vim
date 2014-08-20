@@ -289,14 +289,18 @@ endfunction
 "main function: seach word under the cursor with AG
 function! s:Find(use_filter)
     let filepath = expand('%:h') . '/'
-    for extension in [''] + g:smartgf_extensions
-      "first of all trying to open file under cursor (default gf)
-      let filename = expand(expand('<cfile>')) . extension
-      let filename = substitute(filename, '^\./', filepath, '')
-      if filereadable(filename)
-          execute 'edit ' . filename
-          return
-      endif
+    " Just in case someone somehow messed up their path and remove '.'
+    " Means that in most cases, '.' will be run twice.
+    for prefix in ['.'] + split(&path, ',')
+      for extension in [''] + g:smartgf_extensions
+        "first of all trying to open file under cursor (default gf)
+        let filename = prefix . '/' . expand(expand('<cfile>')) . extension
+        let filename = substitute(filename, '^\./', filepath, '')
+        if filereadable(filename)
+            execute 'edit ' . filename
+            return
+        endif
+      endfor
     endfor
 
     let word = expand('<cword>')
