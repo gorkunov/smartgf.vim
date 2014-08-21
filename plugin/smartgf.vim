@@ -30,6 +30,11 @@ if !exists('g:smartgf_no_filter_key')
 endif
 
 "define divider width between text and file path in the results
+if !exists('g:smartgf_extensions')
+    let g:smartgf_extensions = ['.js', '.coffee', '.ls']
+endif
+
+"define divider width between text and file path in the results
 if !exists('g:smartgf_divider_width')
     let g:smartgf_divider_width = 5
 endif
@@ -283,12 +288,20 @@ endfunction
 
 "main function: seach word under the cursor with AG
 function! s:Find(use_filter)
-    "first of all trying to open file under cursor (default gf)
-    let filename = expand(expand('<cfile>'))
-    if filereadable(filename)
-        execute 'edit ' . filename
-        return
-    endif
+    let filepath = expand('%:h') . '/'
+    " Just in case someone somehow messed up their path and remove '.'
+    " Means that in most cases, '.' will be run twice.
+    for prefix in ['.'] + split(&path, ',')
+      for extension in [''] + g:smartgf_extensions
+        "first of all trying to open file under cursor (default gf)
+        let filename = prefix . '/' . expand(expand('<cfile>')) . extension
+        let filename = substitute(filename, '^\./', filepath, '')
+        if filereadable(filename)
+            execute 'edit ' . filename
+            return
+        endif
+      endfor
+    endfor
 
     let word = expand('<cword>')
     "skip if this is one symbol
