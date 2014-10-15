@@ -51,7 +51,7 @@ Use 1-9 keys as quick shortcuts to select search result or use j,k to change cur
 position in the dialog and o,Enter to choose selected item.
 
 *Note: By default smartgf uses filter by filetype and sets top priority for method definitions 
-and also skips comments in the search results. If you want to skip those filters use 'gF' instead of 'gf'.*
+and also skips comments in the search results. If you want to skip these filters use 'gF' instead of 'gf'.*
 
 *Note: If you use rails.vim you should know that smartgf disable rails.vim 'gf' mappings.
 You can change smartgf mappings (see configuration section) after that rails.vim should works in a normal way.*
@@ -63,7 +63,7 @@ to mark as ingored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .git
 
 Configuration
 -------------
-If you want to change default smartgf settings add those lines to your vimrc file.
+If you want to change default smartgf settings add these lines to your vimrc file.
 
 Available settings for smartgf:
 
