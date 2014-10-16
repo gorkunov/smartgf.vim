@@ -71,7 +71,7 @@ ctags index manually.  Add this line to your .vimrc:
 Note: With macvim/gvim ctags index updates automatically on window focus 
 event. If you want to disable auto-refreshing add this to .vimrc: 
 
-    let g:smartgf_auto_refresh_ctags = 1
+    let g:smartgf_auto_refresh_ctags = 0
 
 ==============================================================================
 4. Options                                                   *smartgf-options*
