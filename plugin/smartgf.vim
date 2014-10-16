@@ -283,6 +283,7 @@ endfunction
 function! s:HasPriority(text, name, type)
     return     ((a:type == 'ruby' && match(a:text, 'def \+' . a:name . '\($\|[ (!\?]\)') != -1)
            \ || (a:type == 'ruby' && match(a:text, '\(module\|class\) \+' . a:name . '\($\| \+\)') != -1)
+           \ || (a:type == 'js'   && match(a:text, "\\a \\+[\"\']" . a:name . "[\"\']") != -1)
            \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
 
