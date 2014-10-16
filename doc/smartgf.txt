@@ -63,6 +63,16 @@ Note: If you use gems search and any CVS integration (git, svn) you need
 to mark as ingored .smartgf_tags and .smartgf_tags_date
 (add to .gitingore for git).
 
+Note: If you use vanilla vim (without GUI/gvim/macvim) you need to refresh 
+ctags index manually.  Add this line to your .vimrc:
+
+    map <F5> :SmargfRefreshTags<CR>
+
+Note: With macvim/gvim ctags index updates automatically on window focus 
+event. If you want to disable auto-refreshing add this to .vimrc: 
+
+    let g:smartgf_auto_refresh_ctags = 1
+
 ==============================================================================
 4. Options                                                   *smartgf-options*
 
@@ -81,6 +91,11 @@ Key for running smartpaigf without filters >
 Default: 1
 Enable search with ruby gems from Gemfile >
     let g:smartgf_enable_gems_search = 1
+<
+                                                *'smartgf_auto_refresh_ctags'*
+Default: 1
+Enable auto-refreshing ctags file on window focus (works only with GUI) >
+    let g:smartgf_auto_refresh_ctags = 1
 <
 
                                               *'smartgf_max_entries_per_page'*

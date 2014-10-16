@@ -50,16 +50,28 @@ or method and type gf in normal mode. After that you will see dialog with search
 Use 1-9 keys as quick shortcuts to select search result or use j,k to change cursor 
 position in the dialog and o,Enter to choose selected item.
 
-*Note: By default smartgf uses filter by filetype and sets top priority for method definitions 
-and also skips comments in the search results. If you want to skip these filters use 'gF' instead of 'gf'.*
+**Note**: By default smartgf uses filter by filetype and sets top priority for method definitions 
+and also skips comments in the search results. If you want to skip these filters use 'gF' instead of 'gf'.
 
-*Note: If you use rails.vim you should know that smartgf disable rails.vim 'gf' mappings.
-You can change smartgf mappings (see configuration section) after that rails.vim should works in a normal way.*
+**Note:** If you use rails.vim you should know that smartgf disable rails.vim 'gf' mappings.
+You can change smartgf mappings (see configuration section) after that rails.vim should works in a normal way.
 
-*Note: filetype/comments/priority filters are available only for vim, javascript/coffee and ruby files.*
+**Note:** filetype/comments/priority filters are available only for vim, javascript/coffee and ruby files.
 
-*Note: If you use gems search and any CVS integration (git, svn) you need
-to mark as ingored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .gitingore for git).*
+**Note:** If you use gems search and any CVS integration (git, svn) you need
+to mark as ingored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .gitingore for git).
+
+Manual refresh ctags index
+--------------------------
+If you use vanilla vim (without GUI/gvim/macvim) you need to refresh ctags index manually. 
+Add this line to your `.vimrc`:
+
+    map <F5> :SmargfRefreshTags<CR>
+
+**Note:** With macvim/gvim ctags index updates automatically on window focus event. 
+If you want to disable auto-refreshing add this to `.vimrc`: 
+
+    let g:smartgf_auto_refresh_ctags = 1
 
 Configuration
 -------------
@@ -79,6 +91,10 @@ let g:smartgf_no_filter_key = 'gF'
 "Enable search with ruby gems from Gemfile
 "default is 1
 let g:smartgf_enable_gems_search = 1
+
+"Enable auto-refreshing ctags file on window focus (works only with GUI)
+"default is 1
+let g:smartgf_auto_refresh_ctags = 1
 
 "Max entries count to display (search results dialog)
 "default is 9

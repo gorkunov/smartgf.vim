@@ -44,6 +44,11 @@ if !exists('g:smartgf_enable_gems_search')
     let g:smartgf_enable_gems_search = 1
 endif
 
+"enable auto-refreshing ctags on window focus
+if !exists('g:smartgf_auto_refresh_ctags')
+    let g:smartgf_auto_refresh_ctags = 1
+endif
+
 "define default tags and date file (for gems search)
 if !exists('g:smartgf_tags_file')
     let g:smartgf_tags_file = '.smartgf_tags'
@@ -492,12 +497,14 @@ function! s:ValidateTagsFile()
         let g:smartgf_tags_last_updated_at = gemfile_updated_at
     endif
     call s:Print('SmartGfTitle', ' ') 
-
+    redraw!
 endfunction
 
-if g:smartgf_enable_gems_search
+if g:smartgf_enable_gems_search && g:smartgf_auto_refresh_ctags && has("gui_running")
     autocmd FocusGained * call s:ValidateTagsFile()
 endif
+
+command! SmargfRefreshTags  call s:ValidateTagsFile()
 
 "key mapping
 silent exec 'nnoremap <silent> ' . g:smartgf_key . '  :<C-U>call <SID>Find(1)<CR>'
