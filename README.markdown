@@ -15,7 +15,7 @@ Vim has some basic scenarios based on ctags or vimgrep
 which fail in most cases and look useless especially for me as ruby developer.
 
 One day I started designing Smartgf. It combines tools for best results. 
-It combines best tools such as the\_sivler\_searcher, ctags and inline-filters (by filetype, skip comment, set top definitions).
+It combines best tools such as the\_silver\_searcher, ctags and inline-filters (by filetype, skip comment, set top definitions).
 
 Since I have been starting using Smargf I love it.
 
