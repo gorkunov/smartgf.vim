@@ -287,8 +287,9 @@ endfunction
 "it can be a function definition or module or class etc
 function! s:HasPriority(text, name, type)
     return     ((a:type == 'ruby' && match(a:text, 'def \+' . a:name . '\($\|[ (!\?]\)') != -1)
+           \ || (a:type == 'ruby' && match(a:text, 'def \+self\.' . a:name . '\($\|[ (!\?]\)') != -1)
            \ || (a:type == 'ruby' && match(a:text, '\(module\|class\) \+' . a:name . '\($\| \+\)') != -1)
-           \ || (a:type == 'js'   && match(a:text, "\\a \\+[\"\']" . a:name . "[\"\']") != -1)
+           \ || (a:type == 'js'   && match(a:text, "\\a \\+[\"\']" . a:name . "[\"\']") != -1) 
            \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
 
@@ -310,6 +311,11 @@ function! s:Find(use_filter)
     endfor
 
     let word = expand('<cword>')
+    " take word with ! or ? in the end
+    let full_word = substitute(expand('<cWORD>'), '^.*\.', '', '')
+    if len(full_word) - len(word) == 1 && (full_word[-1:] == '!' || full_word[-1:] == '?')
+      let word = full_word
+    endif
     "skip if this is one symbol
     if strlen(word) < 2 | return | endif
 
@@ -382,7 +388,7 @@ function! s:Find(use_filter)
     "also search in the GEMS (with ctags)
     if g:smartgf_enable_gems_search && type == 'ruby' && filereadable(g:smartgf_tags_file)
         "search by first column in the ctags file
-        let out = system(s:ag . ' --ackmate "^' . word . '\t" ' . ' ./'. g:smartgf_tags_file)
+        let out = system(s:ag . ' --ackmate "' . word . '" ' . ' ./'. g:smartgf_tags_file)
         for line in split(out, '\n')
             "ctags file has format:
             "<search target>  <path>  <search pattern>"<rest>
@@ -397,6 +403,8 @@ function! s:Find(use_filter)
             "to navigate the result
             let data = { 'file': path, 'real_path': real_path, 'ln': 'no', 'col': 'no', 'text': text, 'gem': 1 }
             call add(gem_definitions, data)
+            let length = strlen(text)
+            if length > left_real_max_width | let left_real_max_width = length | endif
         endfor
     endif
 
