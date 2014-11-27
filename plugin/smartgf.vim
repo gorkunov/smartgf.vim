@@ -268,7 +268,7 @@ endfunction
 "Filter by filetype
 function! s:InvalidFileType(file, type)
     let ext = matchstr(a:file, '\.\zs[^.]\+\ze$')
-    return  (a:type == 'ruby' && index(['rb', 'rake', 'erb', 'haml', 'rabl'], ext) == -1 && index(['Rakefile', 'Gemfile', 'Vagrantfile'], a:file) == -1)
+    return  (a:type == 'ruby' && index(['rb', 'rake', 'erb', 'haml', 'rabl', 'slim'], ext) == -1 && index(['Rakefile', 'Gemfile', 'Vagrantfile'], a:file) == -1)
             \ || (a:type == 'js' && index(['coffee', 'js'], ext) == -1)
             \ || (a:type == 'vim' && ext != 'vim')
 endfunction
@@ -331,7 +331,7 @@ function! s:Find(use_filter)
     "use filetype to filter search results
     let type = &ft
     if a:use_filter
-        if type == 'ruby' || type == 'haml'
+        if type == 'ruby' || type == 'haml' || type == 'slim'
             let type = 'ruby'
         elseif type == 'js' || type == 'coffee'
             let type = 'js'
@@ -388,7 +388,7 @@ function! s:Find(use_filter)
     "also search in the GEMS (with ctags)
     if g:smartgf_enable_gems_search && type == 'ruby' && filereadable(g:smartgf_tags_file)
         "search by first column in the ctags file
-        let out = system(s:ag . ' --ackmate "' . word . '" ' . ' ./'. g:smartgf_tags_file)
+        let out = system(s:ag . ' --ackmate "(^' . word . '\t)" ' . ' ./'. g:smartgf_tags_file)
         for line in split(out, '\n')
             "ctags file has format:
             "<search target>  <path>  <search pattern>"<rest>
