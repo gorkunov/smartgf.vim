@@ -73,6 +73,15 @@ event. If you want to disable auto-refreshing add this to .vimrc:
 
     let g:smartgf_auto_refresh_ctags = 0
 
+To create custom mappings using <Plug> Use:
+
+let g:smartgf_create_default_mappings = 0
+
+nmap gs <Plug>(smartgf-search)
+vmap gs <Plug>(smartgf-search)
+nmap gS <Plug>(smartgf-search-unfiltered)
+vmap gS <Plug>(smartgf-search-unfiltered)
+
 ==============================================================================
 4. Options                                                   *smartgf-options*
 
@@ -81,12 +90,18 @@ Default: 'gf'
 Key for running smartpaigf with all filters (ft/comments/def) >
     let g:smartgf_key = 'gf'
 <
-
                                                      *'smartgf_no_filter_key'*
 Default: 'gF'
 Key for running smartpaigf without filters >
     let g:smartgf_no_filter_key = 'gF'
 <
+
+                                                     *'smartgf_create_default_mappings'*
+Default: 1
+Create the default mappings for user >
+    let g:smartgf_create_default_mappings = 1
+<
+
                                                 *'smartgf_enable_gems_search'*
 Default: 1
 Enable search with ruby gems from Gemfile >
