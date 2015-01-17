@@ -3,21 +3,21 @@ About. Short Story
 **Smartgf** is a tool for quick method definition lookup. It uses mix of ag (faster than ack which faster than grep), ctags and it was designed for Ruby developers.
 
 ![smartgf.vim](https://github.com/gorkunov/smartgf.vim/raw/master/_assets/smartgf.png)
- 
+
 Watch [this screencast](https://vimeo.com/56636037) for more details.
 
 About. Long Story
 ------------------
-Since I had been starting using Vim I was searching a best tool/way for quick method definion lookup.
+Since I had been starting using Vim I was searching a best tool/way for quick method definition lookup.
 
-This feature was always an advantage of big IDE systems like RubyMine(IDEA) or VisualStudio. 
-Vim has some basic scenarios based on ctags or vimgrep 
+This feature was always an advantage of big IDE systems like RubyMine(IDEA) or VisualStudio.
+Vim has some basic scenarios based on ctags or vimgrep
 which fail in most cases and look useless especially for me as ruby developer.
 
-One day I started designing Smartgf. It combines tools for best results. 
+One day I started designing Smartgf. It combines tools for best results.
 It combines best tools such as the\_silver\_searcher, ctags and inline-filters (by filetype, skip comment, set top definitions).
 
-Since I have been starting using Smargf I love it.
+Since I have been starting using Smartgf I love it.
 
 Installation
 ------------
@@ -59,7 +59,7 @@ You can change smartgf mappings (see configuration section) after that rails.vim
 **Note:** filetype/comments/priority filters are available only for vim, javascript/coffee and ruby files.
 
 **Note:** If you use gems search and any CVS integration (git, svn) you need
-to mark as ingored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .gitingore for git).
+to mark as ignored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .gitingore for git).
 
 Manual refresh ctags index
 --------------------------
@@ -72,6 +72,23 @@ Add this line to your `.vimrc`:
 If you want to disable auto-refreshing add this to `.vimrc`: 
 
     let g:smartgf_auto_refresh_ctags = 0
+
+Create custom mappings using `<Plug>`
+--------------------------
+
+```viml
+" disable custom mapping, and use your own:
+let g:smartgf_create_default_mappings = 0
+
+" use custom <Plug> to create your own mappings:
+" <Plug>(smartgf-search)
+" <Plug>(smart-search-unfiltered)
+" for example:
+nmap gs <Plug>(smartgf-search)
+vmap gs <Plug>(smartgf-search)
+nmap gS <Plug>(smartgf-search-unfiltered)
+vmap gS <Plug>(smartgf-search-unfiltered)
+```
 
 Configuration
 -------------
@@ -107,6 +124,33 @@ let g:smartgf_divider_width = 5
 "Extensions to try for filenames which leave it off (will be tried in order)
 " Default is as below
 let g:smartgf_extensions = ['.ls', '.coffee', '.js']
+```
+
+How to lazy load smartgf
+-------------
+
+You can easily lazy load this plugin with NeoBundle:
+
+```viml
+# lazy load smartgf example config:
+NeoBundleLazy 'gorkunov/smartgf.vim', {
+            \ 'mappings': '<Plug>(smartgf-search',
+            \ 'disabled': !executable('ag')
+            \ }
+if neobundle#tap('smartgf.vim')
+    let g:smartgf_create_default_mappings = 0
+    let g:smartgf_enable_gems_search = 0
+    let g:smartgf_auto_refresh_ctags = 0
+    let g:smartgf_max_entries_per_page = 9
+    let g:smartgf_divider_width = 5
+    let g:smartgf_extensions = ['.js', '.coffee', '.json']
+
+    nmap gs <Plug>(smartgf-search)
+    vmap gs <Plug>(smartgf-search)
+    nmap gS <Plug>(smartgf-search-unfiltered)
+    vmap gS <Plug>(smartgf-search-unfiltered)
+    call neobundle#untap()
+endif
 ```
 
 License
