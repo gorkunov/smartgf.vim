@@ -105,6 +105,9 @@ let g:smartgf_key = 'gf'
 "default is 'gF'
 let g:smartgf_no_filter_key = 'gF'
 
+" apply the default mappings (activated by default):
+let g:smartgf_create_default_mappings = 1
+
 "Enable search with ruby gems from Gemfile
 "default is 1
 let g:smartgf_enable_gems_search = 1
@@ -132,7 +135,7 @@ How to lazy load smartgf
 You can easily lazy load this plugin with NeoBundle:
 
 ```viml
-# lazy load smartgf example config:
+" lazy load smartgf example config:
 NeoBundleLazy 'gorkunov/smartgf.vim', {
             \ 'mappings': '<Plug>(smartgf-search',
             \ 'disabled': !executable('ag')
