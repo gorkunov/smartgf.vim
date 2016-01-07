@@ -145,16 +145,19 @@ function! s:InvalidFileType(file, type)
     let ext = matchstr(a:file, '\.\zs[^.]\+\ze$')
     return  (a:type == 'ruby' && index(['rb', 'rake', 'erb', 'haml', 'rabl', 'slim'], ext) == -1 && index(['Rakefile', 'Gemfile', 'Vagrantfile'], a:file) == -1)
                 \ || (a:type == 'js' && index(['coffee', 'js'], ext) == -1)
+                \ || (a:type == 'php' && ext != 'php')
                 \ || (a:type == 'vim' && ext != 'vim')
 endfunction
 
 "return whether *text* is comment
 "for ruby: # or -#
 "for js: // or # or * or /*
+"for php: // or # or * or /*
 "for vim: "
 function! s:IsComment(text, type)
     return     ((a:type == 'ruby' && match(a:text, '^-\?#') != -1)
                 \ || (a:type == 'js'   && match(a:text, '^\(//\|#\|/\s*\*\|\*\)') != -1)
+                \ || (a:type == 'php'  && match(a:text, '^\(//\|#\|/\s*\*\|\*\)') != -1)
                 \ || (a:type == 'vim'  && match(a:text, '^"') != -1))
 endfunction
 
@@ -165,6 +168,7 @@ function! s:HasPriority(text, name, type)
                 \ || (a:type == 'ruby' && match(a:text, 'def \+self\.' . a:name . '\($\|[ (!\?]\)') != -1)
                 \ || (a:type == 'ruby' && match(a:text, '\(module\|class\) \+' . a:name . '\($\| \+\)') != -1)
                 \ || (a:type == 'js'   && match(a:text, "\\a \\+[\"\']" . a:name . "[\"\']") != -1)
+                \ || (a:type == 'php'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1)
                 \ || (a:type == 'vim'  && match(a:text, 'function!\? \+\(.:\)\?' . a:name . '(') != -1))
 endfunction
 
