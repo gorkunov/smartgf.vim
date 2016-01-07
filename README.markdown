@@ -56,7 +56,7 @@ and also skips comments in the search results. If you want to skip these filters
 **Note:** If you use rails.vim you should know that smartgf disable rails.vim 'gf' mappings.
 You can change smartgf mappings (see configuration section) after that rails.vim should works in a normal way.
 
-**Note:** filetype/comments/priority filters are available only for vim, javascript/coffee and ruby files.
+**Note:** filetype/comments/priority filters are available only for vim, javascript/coffee, php and ruby files.
 
 **Note:** If you use gems search and any CVS integration (git, svn) you need
 to mark as ignored ```.smartgf_tags``` and ```.smartgf_tags_date``` (add to .gitingore for git).
